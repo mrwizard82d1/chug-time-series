@@ -71,3 +71,9 @@ hierarchy:
 My question, and hopefully yours, is, "How would we solve this problem
 using Clojure?"
 
+"Instructions"
+==============
+
+The file *test/chug_time_series/time_series.clj* contains unit
+tests. Because I created these tests from my idea of how to build it,
+they probably contain some "bias" on how to implement a solution.
