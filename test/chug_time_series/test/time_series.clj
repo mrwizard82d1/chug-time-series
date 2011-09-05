@@ -104,45 +104,45 @@
   (is (= irr-expect-samples (samples irr-time-series))))
 
 
-(deftest regular-add-point-get-point
-  (let [k-value 44
-	k-end (sample-count reg-time-series)
-	additional-point (add-point reg-time-series k-value)
-	k-time (.clone (start-time additional-point))]
-    (.add k-time Calendar/SECOND
-	  (* k-end (sample-period additional-point)))
-    (is (= (inc k-end) (sample-count additional-point)))
-    (is (= (make-sample k-value k-time)
-	   (get-point additional-point k-end)))))
+;; (deftest regular-add-point-get-point
+;;   (let [k-value 44
+;; 	k-end (sample-count reg-time-series)
+;; 	additional-point (add-point reg-time-series k-value)
+;; 	k-time (.clone (start-time additional-point))]
+;;     (.add k-time Calendar/SECOND
+;; 	  (* k-end (sample-period additional-point)))
+;;     (is (= (inc k-end) (sample-count additional-point)))
+;;     (is (= (make-sample k-value k-time)
+;; 	   (get-point additional-point k-end)))))
 
 
-(deftest aregular-add-point-get-point
-  (let [k-value 44
-	k-end (sample-count areg-time-series)
-        k-delta 4253                    ; millisecond
-        k-time (doto (.clone (start-time areg-time-series))
-                 (.add Calendar/MILLISECOND k-delta))
-	additional-point (add-point areg-time-series
-                                    k-value k-time)]
-    (is (= (inc k-end) (sample-count additional-point)))
-    (is (= (make-sample k-value k-time)
-	   (get-point additional-point k-end)))))
+;; (deftest aregular-add-point-get-point
+;;   (let [k-value 44
+;; 	k-end (sample-count areg-time-series)
+;;         k-delta 4253                    ; millisecond
+;;         k-time (doto (.clone (start-time areg-time-series))
+;;                  (.add Calendar/MILLISECOND k-delta))
+;; 	additional-point (add-point areg-time-series
+;;                                     k-value k-time)]
+;;     (is (= (inc k-end) (sample-count additional-point)))
+;;     (is (= (make-sample k-value k-time)
+;; 	   (get-point additional-point k-end)))))
 
 
-(deftest irregular-add-point-get-point
-  (let [k-value 44
-	k-end (sample-count irr-time-series)
-        k-delta -2973095		; data delta millisecond
-        k-time (doto (.clone (start-time irr-time-series))
-                 (.add Calendar/MILLISECOND k-delta))
-	k-save-delta -3049903		; save delta milliseconds
- 	k-save-time (doto (.clone (start-time irr-time-series))
-		      (.add Calendar/MILLISECOND k-save-delta))
-	additional-point (add-point irr-time-series
-                                    k-value k-time k-save-time)]
-    (is (= (inc k-end) (sample-count additional-point)))
-    (is (= (make-sample k-value k-time k-save-time)
-	   (get-point additional-point k-end)))))
+;; (deftest irregular-add-point-get-point
+;;   (let [k-value 44
+;; 	k-end (sample-count irr-time-series)
+;;         k-delta -2973095		; data delta millisecond
+;;         k-time (doto (.clone (start-time irr-time-series))
+;;                  (.add Calendar/MILLISECOND k-delta))
+;; 	k-save-delta -3049903		; save delta milliseconds
+;;  	k-save-time (doto (.clone (start-time irr-time-series))
+;; 		      (.add Calendar/MILLISECOND k-save-delta))
+;; 	additional-point (add-point irr-time-series
+;;                                     k-value k-time k-save-time)]
+;;     (is (= (inc k-end) (sample-count additional-point)))
+;;     (is (= (make-sample k-value k-time k-save-time)
+;; 	   (get-point additional-point k-end)))))
 
 
 (defn regular-time-series-fixture [f]
