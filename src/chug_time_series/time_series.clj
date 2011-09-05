@@ -45,25 +45,32 @@
 
 (defn make-time-series
   "Make a time series."
-  ([the-name the-start the-period the-bad-data measurements]
-     {:tag :regular
-      :name the-name
+  ;; This first expression captures the data common to all types of
+  ;; time series.  It should not be called directly.
+  ([the-name the-start the-period]
+     {:name the-name
       :start the-start
-      :period the-period
-      :bad-value the-bad-data
-      :sample-data (replace-bad-data the-bad-data BAD-DATA measurements)})
+      :period the-period})
+  ([the-name the-start the-period the-bad-data measurements]
+     (let [abstract-series (make-time-series the-name
+                                             the-start
+                                             the-period)]
+       (-> abstract-series
+           (assoc :tag :regular)
+           (assoc :bad-value the-bad-data)
+           (assoc :sample-data (replace-bad-data the-bad-data
+                                                 BAD-DATA
+                                                 measurements)))))
   ([the-name the-start the-period the-measurements]
-     (if (has-saved-at-time? (first the-measurements))
-       {:tag :irregular
-        :name the-name
-        :start the-start
-        :period the-period
-        :sample-data the-measurements}
-       {:tag :almost-regular
-        :name the-name
-        :start the-start
-        :period the-period
-        :sample-data the-measurements})))
+     (let [abstract-series (make-time-series the-name
+                                             the-start
+                                             the-period)]
+       (-> abstract-series
+           (assoc :sample-data the-measurements)
+           (assoc :tag (if (has-saved-at-time?
+                            (first the-measurements))
+                         :irregular
+                         :almost-regular))))))
 
 
 (defn series-name [ts]
@@ -81,37 +88,38 @@
   (:start ts))
 
 
+(defn- nth-period-from-start
+  "Calculate the nth period from start."
+  ([n period start]
+     (doto (.clone start)
+       (.add Calendar/SECOND (* n period))))
+  ([n period start delta]
+     (doto (nth-period-from-start n period start)
+       (.add Calendar/MILLISECOND (* delta 1000)))))
+
+
 (defn- make-samples 
   "Make a sequence of samples from sample-data."
   ([start period sample-data]
      (map-indexed
       (fn [n measurement]
-        (let [sample-time (.clone start)]
-          (.add sample-time Calendar/SECOND (* n period))
-          (make-sample measurement sample-time)))
+        (make-sample measurement (nth-period-from-start n period start)))
       sample-data))
   ([start period sample-measurements time-deltas]
      (map
       (fn [n measurement delta]
-        (let [sample-time (.clone start)]
-          (.add sample-time Calendar/SECOND (* n period))
-          (.add sample-time Calendar/MILLISECOND (* delta 1000))
-          (make-sample measurement sample-time)))
+	(make-sample measurement
+		     (nth-period-from-start n period start delta)))
       (range (count sample-measurements)) sample-measurements time-deltas))
   ([start period sample-measurements time-deltas save-deltas]
      (map
       (fn [n measurement time-delta save-delta]
-        (let [sample-time (.clone start)
-              save-time (.clone start)]
-          (doto sample-time
-            (.add Calendar/SECOND (* n period))
-            (.add Calendar/MILLISECOND (* time-delta 1000)))
-          (doto save-time
-            (.add Calendar/SECOND (* n period))
-            (.add Calendar/MILLISECOND (* save-delta 1000)))
-          (make-sample measurement sample-time save-time)))
-      (range (count sample-measurements)) sample-measurements
-      time-deltas save-deltas)))
+	(make-sample measurement
+		     (nth-period-from-start n period start time-delta)
+		     (nth-period-from-start n period start save-delta)))
+      (range
+       (count sample-measurements)) sample-measurements
+       time-deltas save-deltas)))
 
 
 (defmulti samples
@@ -127,6 +135,9 @@
   (:sample-data ts))
 
 
-(defn sample-count [ts]
+(defn sample-count
   "Return the number of samples in this time series."
+  [ts]
   (count (samples ts)))
+
+  
