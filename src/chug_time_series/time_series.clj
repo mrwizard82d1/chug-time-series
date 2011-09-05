@@ -73,9 +73,17 @@
                          :almost-regular))))))
 
 
+(declare sample-count)
+
+
 (defn series-name [ts]
   "Extract the name of this time series."
   (:name ts))
+
+
+(defn sample-count [ts]
+  "Return the number of samples in this time series."
+  (count (:sample-data ts)))
 
 
 (defn sample-period [ts]
@@ -86,6 +94,47 @@
 (defn start-time [ts]
   "Extract the start time of this time series."
   (:start ts))
+
+
+(defn add-point
+  "Add a new point to a time series."
+  ([ts additional-sample]
+     (make-time-series (series-name ts)
+		       (start-time ts)
+		       (sample-period ts)
+		       (:bad-data ts)
+		       (concat (:sample-data ts) [additional-sample])))
+  ([ts additional-value additional-time]
+     (assert (= :almost-regular (:tag ts)))
+     (make-time-series (series-name ts)
+		       (start-time ts)
+		       (sample-period ts)
+		       (concat (:sample-data ts)
+			       (vector (make-sample additional-value
+						    additional-time)))))
+  ([ts additional-value additional-time additional-save]
+     (assert (= :irregular (:tag ts)))
+     (make-time-series (series-name ts)
+		       (start-time ts)
+		       (sample-period ts)
+		       (concat (:sample-data ts)
+			       (vector (make-sample additional-value
+						    additional-time
+						    additional-save))))))
+
+
+(defmulti get-point
+  "Return the specified point."
+  (fn [ts k]
+    (:tag ts)))
+(defmethod get-point :regular [ts k]
+  (let [sample-time (.clone (start-time ts))]
+    (.add sample-time Calendar/SECOND (* k (sample-period ts)))
+    [(nth (:sample-data ts) k) sample-time]))
+(defmethod get-point :almost-regular [ts k]
+	   (nth (:sample-data ts) k))
+(defmethod get-point :irregular [ts k]
+	   (nth (:sample-data ts) k))
 
 
 (defn- nth-period-from-start
@@ -129,15 +178,11 @@
   (make-samples (start-time ts)
                 (sample-period ts)
                 (:sample-data ts)))
-(defmethod samples :almost-regular [ts]
-  (:sample-data ts))
-(defmethod samples :irregular [ts]
-  (:sample-data ts))
+(defmethod
+    samples :almost-regular [ts]
+    (:sample-data ts))
+(defmethod
+    samples :irregular [ts]
+    (:sample-data ts))
 
 
-(defn sample-count
-  "Return the number of samples in this time series."
-  [ts]
-  (count (samples ts)))
-
-  
