@@ -56,7 +56,7 @@
                                              the-start
                                              the-period)]
        (-> abstract-series
-           (assoc :tag :regular)
+           (assoc :tag ::regular)
            (assoc :bad-value the-bad-data)
            (assoc :sample-data (replace-bad-data the-bad-data
                                                  BAD-DATA
@@ -69,8 +69,8 @@
            (assoc :sample-data the-measurements)
            (assoc :tag (if (has-saved-at-time?
                             (first the-measurements))
-                         :irregular
-                         :almost-regular))))))
+                         ::irregular
+                         ::almost-regular))))))
 
 
 (declare sample-count)
@@ -105,7 +105,7 @@
 		       (:bad-data ts)
 		       (concat (:sample-data ts) [additional-sample])))
   ([ts additional-value additional-time]
-     (assert (= :almost-regular (:tag ts)))
+     (assert (= ::almost-regular (:tag ts)))
      (make-time-series (series-name ts)
 		       (start-time ts)
 		       (sample-period ts)
@@ -113,7 +113,7 @@
 			       (vector (make-sample additional-value
 						    additional-time)))))
   ([ts additional-value additional-time additional-save]
-     (assert (= :irregular (:tag ts)))
+     (assert (= ::irregular (:tag ts)))
      (make-time-series (series-name ts)
 		       (start-time ts)
 		       (sample-period ts)
@@ -123,17 +123,23 @@
 						    additional-save))))))
 
 
+;;;
+;;; Because almost regular and irregular time series have many parts
+;;; in common, I create an ad-hoc hierarchy with a "common" parent.
+;;;
+(derive ::almost-regular ::not-quite-periodic)
+(derive ::irregular ::not-quite-periodic)
+
+
 (defmulti get-point
   "Return the specified point."
   (fn [ts k]
     (:tag ts)))
-(defmethod get-point :regular [ts k]
+(defmethod get-point ::regular [ts k]
   (let [sample-time (.clone (start-time ts))]
     (.add sample-time Calendar/SECOND (* k (sample-period ts)))
     [(nth (:sample-data ts) k) sample-time]))
-(defmethod get-point :almost-regular [ts k]
-	   (nth (:sample-data ts) k))
-(defmethod get-point :irregular [ts k]
+(defmethod get-point ::not-quite-periodic [ts k]
 	   (nth (:sample-data ts) k))
 
 
@@ -174,15 +180,15 @@
 (defmulti samples
   "Extract the samples for this time series."
   :tag)
-(defmethod samples :regular [ts]
+(defmethod samples ::regular [ts]
   (make-samples (start-time ts)
                 (sample-period ts)
                 (:sample-data ts)))
 (defmethod
-    samples :almost-regular [ts]
+    samples ::almost-regular [ts]
     (:sample-data ts))
 (defmethod
-    samples :irregular [ts]
+    samples ::irregular [ts]
     (:sample-data ts))
 
 
