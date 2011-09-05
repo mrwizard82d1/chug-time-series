@@ -77,3 +77,18 @@ using Clojure?"
 The file *test/chug_time_series/time_series.clj* contains unit
 tests. Because I created these tests from my idea of how to build it,
 they probably contain some "bias" on how to implement a solution.
+
+This solution contains four different tags representing four different
+stages of development. 
+
+     * ts_constructor - A very simple implementation of the time
+       series constructor.
+     * ts_ctor_refactor - Refactor the constructor implementation to
+       remove duplicate code.
+     * add_point - Added feature to add points to the time series.
+     * add_point_refactor - Refactored code to eliminate duplicate
+       code by introducing an ad hoc hierarchy.
+
+In addition, the tip revision contains a file named
+CrossParadigmProgramming.pdf. This file is a presentation that I gave
+at the Clojure Houston User Group.
